@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-neo-background text-gray-800 font-sans;
+  }
+}
+
+@layer components {
+  .neo-card {
+    @apply bg-neo-light rounded-3xl shadow-neo p-6 transition-all duration-300;
+  }
+
+  .neo-card:hover {
+    @apply shadow-neo-hover;
+  }
+
+  .neo-button {
+    @apply bg-neo-light rounded-2xl shadow-neo px-6 py-3 font-semibold text-gray-700 transition-all duration-300 hover:shadow-neo-hover active:shadow-neo-inset;
+  }
+
+  .neo-input {
+    @apply bg-neo-light rounded-2xl shadow-neo-inset px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
+  }
+
+  .neo-button-primary {
+    @apply bg-gradient-to-br from-primary-400 to-primary-600 text-white rounded-2xl shadow-neo px-6 py-3 font-semibold transition-all duration-300 hover:shadow-neo-hover active:shadow-neo-inset;
+  }
+}
