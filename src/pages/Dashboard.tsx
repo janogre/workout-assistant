@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, type WorkoutProgram } from '../lib/supabase';
-import { MessageSquare, Dumbbell, TrendingUp, LogOut, Plus, Eye } from 'lucide-react';
+import { MessageSquare, Dumbbell, TrendingUp, LogOut, Plus, Eye, Activity } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <button
             onClick={() => navigate('/chat')}
             className="neo-card hover:shadow-neo-hover transition-all p-8 text-left"
@@ -155,6 +155,21 @@ const Dashboard: React.FC = () => {
               <div>
                 <h3 className="text-2xl font-bold text-gray-800">Mine programmer</h3>
                 <p className="text-gray-600">Se og logg dine treningsprogrammer</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/statistics')}
+            className="neo-card hover:shadow-neo-hover transition-all p-8 text-left"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="neo-card p-4">
+                <Activity className="w-8 h-8 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800">Statistikk</h3>
+                <p className="text-gray-600">Se din treningsaktivitet og fremgang</p>
               </div>
             </div>
           </button>

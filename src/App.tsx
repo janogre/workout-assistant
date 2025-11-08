@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Chat from './pages/Chat';
 import Programs from './pages/Programs';
 import ProgramView from './pages/ProgramView';
+import Statistics from './pages/Statistics';
 
 function App() {
   return (
@@ -44,6 +45,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProgramView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute>
+                <Statistics />
               </ProtectedRoute>
             }
           />

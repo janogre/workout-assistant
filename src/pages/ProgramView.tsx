@@ -14,6 +14,7 @@ const ProgramView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeExercise, setActiveExercise] = useState<string | null>(null);
   const [logData, setLogData] = useState<{ [key: string]: { sets: number; reps: string; notes: string } }>({});
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     loadProgramData();
@@ -85,12 +86,13 @@ const ProgramView: React.FC = () => {
 
     if (error) {
       console.error('Error logging workout:', error);
-      alert('Feil ved lagring av økt');
+      setSuccessMessage('');
     } else {
       setActiveExercise(null);
       setLogData({});
       loadProgramData();
-      alert('Økt lagret! 🎉');
+      setSuccessMessage('Økt lagret! 🎉');
+      setTimeout(() => setSuccessMessage(''), 3000);
     }
   };
 
@@ -133,6 +135,14 @@ const ProgramView: React.FC = () => {
             <p className="text-gray-600">{program.description}</p>
           </div>
         </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-6 bg-gradient-to-r from-green-400 to-green-600 text-white px-6 py-4 rounded-2xl shadow-neo flex items-center gap-3 animate-pulse">
+            <CheckCircle className="w-6 h-6" />
+            <span className="font-semibold">{successMessage}</span>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
