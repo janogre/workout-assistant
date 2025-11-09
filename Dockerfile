@@ -12,7 +12,11 @@ RUN npm ci
 # Copy frontend source
 COPY . .
 
-# Build frontend (excluding server folder)
+# Build argument for API URL
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
+# Build frontend
 RUN npm run build
 
 # Stage 2: Build backend
@@ -29,8 +33,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install serve for frontend and copy backend dependencies
-RUN npm install -g serve
+# Install serve and wget for healthcheck
+RUN apk add --no-cache wget && npm install -g serve
 
 # Copy built frontend from stage 1
 COPY --from=frontend-builder /app/dist /app/dist
@@ -44,7 +48,11 @@ EXPOSE 3000 3001
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "Starting backend on port ${PORT:-3001}..."' >> /app/start.sh && \
     echo 'cd /app/server && node index.js &' >> /app/start.sh && \
+    echo 'BACKEND_PID=$!' >> /app/start.sh && \
+    echo 'echo "Backend started with PID $BACKEND_PID"' >> /app/start.sh && \
+    echo 'echo "Starting frontend on port 3000..."' >> /app/start.sh && \
     echo 'serve -s /app/dist -l 3000' >> /app/start.sh && \
     chmod +x /app/start.sh
 

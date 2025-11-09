@@ -2,18 +2,20 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # Set API URL for production build
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
     ports:
-      - "3000:3000"  # Frontend
-      - "3001:3001"  # Backend API
+      - "${FRONTEND_PORT:-3000}:3000"  # Frontend
+      - "${BACKEND_PORT:-3001}:3001"   # Backend API
     environment:
       # Backend environment variables
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - PORT=3001
-      # These are set at build time but shown here for reference
-      # - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      # - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
-      # - VITE_API_URL=http://localhost:3001
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - PORT=${BACKEND_PORT:-3001}
     env_file:
       - .env
     restart: unless-stopped
