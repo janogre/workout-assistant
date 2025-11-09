@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { api, type User, type Session } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -28,42 +27,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    api.getSession().then((data) => {
+      if (data?.user) {
+        setUser(data.user);
+        const token = api.getToken();
+        if (token) {
+          setSession({
+            access_token: token,
+            user: data.user,
+          });
+        }
+      }
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) throw error;
+    const { user, session } = await api.signUp(email, password);
+    setUser(user);
+    setSession(session);
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    const { user, session } = await api.signIn(email, password);
+    setUser(user);
+    setSession(session);
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await api.signOut();
+    setUser(null);
+    setSession(null);
   };
 
   const value = {

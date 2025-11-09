@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { anthropic, MODEL, type Message } from '../lib/anthropic';
 import { Send, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 
@@ -115,35 +115,24 @@ const Chat: React.FC = () => {
       const programData = JSON.parse(jsonMatch[0]);
 
       // Create program in database
-      const { data: program, error: programError } = await supabase
-        .from('workout_programs')
-        .insert({
-          user_id: user.id,
-          name: programData.program_name,
-          description: programData.description,
-        })
-        .select()
-        .single();
-
-      if (programError) throw programError;
+      const program = await api.createProgram(
+        programData.program_name,
+        programData.description
+      );
 
       // Create exercises
-      const exercises = programData.exercises.map((ex: any, index: number) => ({
-        program_id: program.id,
-        name: ex.name,
-        description: ex.description,
-        sets: ex.sets,
-        reps: ex.reps,
-        rest_time: ex.rest_time,
-        notes: ex.notes || '',
-        order_index: index,
-      }));
-
-      const { error: exercisesError } = await supabase
-        .from('exercises')
-        .insert(exercises);
-
-      if (exercisesError) throw exercisesError;
+      for (let index = 0; index < programData.exercises.length; index++) {
+        const ex = programData.exercises[index];
+        await api.createExercise(program.id, {
+          name: ex.name,
+          description: ex.description,
+          sets: ex.sets,
+          reps: ex.reps,
+          rest_time: ex.rest_time,
+          notes: ex.notes || '',
+          order_index: index,
+        });
+      }
 
       // Show success message
       setMessages((prev) => [

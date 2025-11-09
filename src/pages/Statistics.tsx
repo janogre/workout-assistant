@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, type WorkoutLog } from '../lib/supabase';
+import { api, type WorkoutLog } from '../lib/api';
 import { ArrowLeft, Calendar, Dumbbell, TrendingUp, Activity } from 'lucide-react';
 
 type DayStats = {
@@ -33,19 +33,12 @@ const Statistics: React.FC = () => {
   const loadStatistics = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('completed_at', { ascending: false });
-
-    if (error) {
+    try {
+      const data = await api.getWorkoutLogs();
+      processStatistics(data || []);
+    } catch (error) {
       console.error('Error loading statistics:', error);
-      setLoading(false);
-      return;
     }
-
-    processStatistics(data || []);
     setLoading(false);
   };
 

@@ -1,5 +1,5 @@
-// Backend API URL - defaults to localhost for development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Re-export from api.ts to maintain backward compatibility
+import { api } from './api';
 
 export const MODEL = 'claude-sonnet-4-5-20250929';
 
@@ -18,7 +18,7 @@ export type MessageResponse = {
   role: string;
 };
 
-// Call backend API instead of Anthropic directly
+// Call backend API with authentication
 export const anthropic = {
   messages: {
     create: async (params: {
@@ -27,22 +27,7 @@ export const anthropic = {
       system: string;
       messages: Message[];
     }): Promise<MessageResponse> => {
-      const response = await fetch(`${API_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: params.messages,
-          system: params.system,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-
-      return response.json();
+      return api.sendChatMessage(params.messages, params.system);
     },
   },
 };

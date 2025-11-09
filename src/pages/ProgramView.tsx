@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, type WorkoutProgram, type Exercise, type WorkoutLog } from '../lib/supabase';
+import { api, type WorkoutProgram, type Exercise, type WorkoutLog } from '../lib/api';
 import { ArrowLeft, Dumbbell, Clock, CheckCircle, Plus, TrendingUp } from 'lucide-react';
 
 const ProgramView: React.FC = () => {
@@ -23,44 +23,20 @@ const ProgramView: React.FC = () => {
   const loadProgramData = async () => {
     if (!id || !user) return;
 
-    // Load program
-    const { data: programData, error: programError } = await supabase
-      .from('workout_programs')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      // Load program
+      const programData = await api.getProgram(id);
+      setProgram(programData);
 
-    if (programError) {
-      console.error('Error loading program:', programError);
-      return;
-    }
-
-    setProgram(programData);
-
-    // Load exercises
-    const { data: exercisesData, error: exercisesError } = await supabase
-      .from('exercises')
-      .select('*')
-      .eq('program_id', id)
-      .order('order_index', { ascending: true });
-
-    if (exercisesError) {
-      console.error('Error loading exercises:', exercisesError);
-    } else {
+      // Load exercises
+      const exercisesData = await api.getExercises(id);
       setExercises(exercisesData || []);
-    }
 
-    // Load logs
-    const { data: logsData, error: logsError } = await supabase
-      .from('workout_logs')
-      .select('*')
-      .eq('program_id', id)
-      .order('completed_at', { ascending: false });
-
-    if (logsError) {
-      console.error('Error loading logs:', logsError);
-    } else {
+      // Load logs
+      const logsData = await api.getProgramLogs(id);
       setLogs(logsData || []);
+    } catch (error) {
+      console.error('Error loading program data:', error);
     }
 
     setLoading(false);
@@ -75,24 +51,23 @@ const ProgramView: React.FC = () => {
       return;
     }
 
-    const { error } = await supabase.from('workout_logs').insert({
-      program_id: id,
-      user_id: user.id,
-      exercise_id: exerciseId,
-      sets_completed: data.sets,
-      reps_completed: data.reps,
-      notes: data.notes || '',
-    });
+    try {
+      await api.createWorkoutLog({
+        program_id: id,
+        exercise_id: exerciseId,
+        sets_completed: data.sets,
+        reps_completed: data.reps,
+        notes: data.notes || '',
+      });
 
-    if (error) {
-      console.error('Error logging workout:', error);
-      setSuccessMessage('');
-    } else {
       setActiveExercise(null);
       setLogData({});
       loadProgramData();
       setSuccessMessage('Økt lagret! 🎉');
       setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Error logging workout:', error);
+      setSuccessMessage('');
     }
   };
 

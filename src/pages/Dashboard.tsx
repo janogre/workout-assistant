@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, type WorkoutProgram } from '../lib/supabase';
+import { api, type WorkoutProgram } from '../lib/api';
 import { MessageSquare, Dumbbell, TrendingUp, LogOut, Plus, Eye, Activity } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -23,16 +23,11 @@ const Dashboard: React.FC = () => {
   const loadPrograms = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('workout_programs')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading programs:', error);
-    } else {
+    try {
+      const data = await api.getPrograms();
       setPrograms(data || []);
+    } catch (error) {
+      console.error('Error loading programs:', error);
     }
     setLoading(false);
   };
@@ -40,30 +35,12 @@ const Dashboard: React.FC = () => {
   const loadStats = async () => {
     if (!user) return;
 
-    const { count: programCount } = await supabase
-      .from('workout_programs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    const { count: workoutCount } = await supabase
-      .from('workout_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    const { count: weekCount } = await supabase
-      .from('workout_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .gte('completed_at', oneWeekAgo.toISOString());
-
-    setStats({
-      totalPrograms: programCount || 0,
-      totalWorkouts: workoutCount || 0,
-      thisWeek: weekCount || 0,
-    });
+    try {
+      const data = await api.getStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
   };
 
   const handleSignOut = async () => {

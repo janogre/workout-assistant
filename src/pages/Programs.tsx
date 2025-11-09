@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, type WorkoutProgram } from '../lib/supabase';
+import { api, type WorkoutProgram } from '../lib/api';
 import { ArrowLeft, Dumbbell, Eye, Plus, Trash2 } from 'lucide-react';
 
 const Programs: React.FC = () => {
@@ -17,16 +17,11 @@ const Programs: React.FC = () => {
   const loadPrograms = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('workout_programs')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading programs:', error);
-    } else {
+    try {
+      const data = await api.getPrograms();
       setPrograms(data || []);
+    } catch (error) {
+      console.error('Error loading programs:', error);
     }
     setLoading(false);
   };
@@ -34,13 +29,12 @@ const Programs: React.FC = () => {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Er du sikker på at du vil slette "${name}"?`)) return;
 
-    const { error } = await supabase.from('workout_programs').delete().eq('id', id);
-
-    if (error) {
+    try {
+      await api.deleteProgram(id);
+      loadPrograms();
+    } catch (error) {
       console.error('Error deleting program:', error);
       alert('Feil ved sletting av program');
-    } else {
-      loadPrograms();
     }
   };
 
