@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api, type WorkoutProgram, type Exercise, type WorkoutLog } from '../lib/api';
-import { ArrowLeft, Dumbbell, Clock, CheckCircle, Plus, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
 
 const ProgramView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,8 +12,13 @@ const ProgramView: React.FC = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeExercise, setActiveExercise] = useState<string | null>(null);
-  const [logData, setLogData] = useState<{ [key: string]: { sets: number; reps: string; notes: string } }>({});
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+  const [loggingExercise, setLoggingExercise] = useState<string | null>(null);
+  const [logData, setLogData] = useState<{ sets: number; reps: string; notes: string }>({
+    sets: 0,
+    reps: '',
+    notes: '',
+  });
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
@@ -24,15 +29,12 @@ const ProgramView: React.FC = () => {
     if (!id || !user) return;
 
     try {
-      // Load program
       const programData = await api.getProgram(id);
       setProgram(programData);
 
-      // Load exercises
       const exercisesData = await api.getExercises(id);
       setExercises(exercisesData || []);
 
-      // Load logs
       const logsData = await api.getProgramLogs(id);
       setLogs(logsData || []);
     } catch (error) {
@@ -42,11 +44,10 @@ const ProgramView: React.FC = () => {
     setLoading(false);
   };
 
-  const handleLogWorkout = async (exerciseId: string) => {
-    if (!user || !id) return;
+  const handleLogWorkout = async () => {
+    if (!user || !id || !loggingExercise) return;
 
-    const data = logData[exerciseId];
-    if (!data || !data.sets || !data.reps) {
+    if (!logData.sets || !logData.reps) {
       alert('Vennligst fyll inn sett og repetisjoner');
       return;
     }
@@ -54,25 +55,33 @@ const ProgramView: React.FC = () => {
     try {
       await api.createWorkoutLog({
         program_id: id,
-        exercise_id: exerciseId,
-        sets_completed: data.sets,
-        reps_completed: data.reps,
-        notes: data.notes || '',
+        exercise_id: loggingExercise,
+        sets_completed: logData.sets,
+        reps_completed: logData.reps,
+        notes: logData.notes || '',
       });
 
-      setActiveExercise(null);
-      setLogData({});
+      setLoggingExercise(null);
+      setLogData({ sets: 0, reps: '', notes: '' });
       loadProgramData();
-      setSuccessMessage('Økt lagret! 🎉');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      setSuccessMessage('Økt lagret!');
+      setTimeout(() => setSuccessMessage(''), 2000);
     } catch (error) {
       console.error('Error logging workout:', error);
-      setSuccessMessage('');
     }
   };
 
   const getExerciseLogs = (exerciseId: string) => {
     return logs.filter((log) => log.exercise_id === exerciseId);
+  };
+
+  const getTotalEstimatedTime = () => {
+    const totalMinutes = exercises.reduce((acc, ex) => {
+      const restSeconds = parseInt(ex.rest_time) || 60;
+      const setTime = ex.sets * (30 + restSeconds / 60); // Assume ~30 sec per set
+      return acc + setTime;
+    }, 0);
+    return Math.round(totalMinutes);
   };
 
   if (loading) {
@@ -98,192 +107,142 @@ const ProgramView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen p-4 md:p-8 pb-24">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate('/dashboard')} className="neo-button p-3">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="neo-button p-2 mb-4 inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Tilbake</span>
           </button>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-800">{program.name}</h1>
-            <p className="text-gray-600">{program.description}</p>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">{program.name}</h1>
+          <p className="text-gray-600 text-sm">{program.description}</p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 bg-gradient-to-r from-green-400 to-green-600 text-white px-6 py-4 rounded-2xl shadow-neo flex items-center gap-3 animate-pulse">
-            <CheckCircle className="w-6 h-6" />
-            <span className="font-semibold">{successMessage}</span>
+          <div className="mb-4 bg-gradient-to-r from-green-400 to-green-500 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span className="font-semibold text-sm">{successMessage}</span>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="neo-card">
-            <div className="flex items-center gap-3">
-              <Dumbbell className="w-6 h-6 text-primary-600" />
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">Øvelser</p>
-                <p className="text-2xl font-bold text-gray-800">{exercises.length}</p>
-              </div>
+        {/* Compact Stats Bar */}
+        <div className="neo-card mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-800">{exercises.length}</p>
+              <p className="text-xs text-gray-600">øvelser</p>
             </div>
-          </div>
-          <div className="neo-card">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">Fullførte økter</p>
-                <p className="text-2xl font-bold text-gray-800">{logs.length}</p>
-              </div>
+            <div className="h-10 w-px bg-gray-300"></div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-800">{getTotalEstimatedTime()}</p>
+              <p className="text-xs text-gray-600">min</p>
             </div>
-          </div>
-          <div className="neo-card">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600 font-semibold">Siste økt</p>
-                <p className="text-sm font-bold text-gray-800">
-                  {logs[0] ? new Date(logs[0].completed_at).toLocaleDateString('nb-NO') : 'Ingen'}
-                </p>
-              </div>
+            <div className="h-10 w-px bg-gray-300"></div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-800">{logs.length}</p>
+              <p className="text-xs text-gray-600">økter</p>
             </div>
           </div>
         </div>
 
-        {/* Exercises */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Øvelser</h2>
-          {exercises.map((exercise) => {
+        {/* Exercises List - Compact View */}
+        <div className="space-y-2">
+          {exercises.map((exercise, index) => {
             const exerciseLogs = getExerciseLogs(exercise.id);
-            const isActive = activeExercise === exercise.id;
+            const isExpanded = expandedExercise === exercise.id;
+            const lastLog = exerciseLogs[0];
 
             return (
-              <div key={exercise.id} className="neo-card">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{exercise.name}</h3>
-                  <p className="text-gray-600 mb-3">{exercise.description}</p>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Dumbbell className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-semibold">
-                        {exercise.sets} sett × {exercise.reps} reps
+              <div key={exercise.id} className="neo-card hover:shadow-lg transition-all">
+                {/* Compact Header - Always Visible */}
+                <div
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => setExpandedExercise(isExpanded ? null : exercise.id)}
+                >
+                  <div className="neo-card w-8 h-8 flex items-center justify-center text-sm font-bold text-primary-600">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-800 text-base">{exercise.name}</h3>
+                    <div className="flex items-center gap-3 text-xs text-gray-600 mt-0.5">
+                      <span className="font-semibold">
+                        {exercise.sets} × {exercise.reps}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-700 font-semibold">Hvile: {exercise.rest_time}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {exercise.rest_time}
+                      </span>
+                      {lastLog && (
+                        <>
+                          <span>•</span>
+                          <span className="text-green-600">
+                            Sist: {lastLog.sets_completed} × {lastLog.reps_completed}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  {exercise.notes && (
-                    <p className="text-sm text-gray-600 mt-2 italic">💡 {exercise.notes}</p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLoggingExercise(exercise.id);
+                        setLogData({ sets: exercise.sets, reps: exercise.reps, notes: '' });
+                      }}
+                      className="neo-button-primary px-3 py-1.5 text-xs flex items-center gap-1"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Logg
+                    </button>
+                    <button className="text-gray-400 p-1">
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Log Form */}
-                {isActive ? (
-                  <div className="border-t border-gray-300 pt-4 mt-4">
-                    <h4 className="font-semibold text-gray-800 mb-3">Logg økten</h4>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Sett fullført
-                        </label>
-                        <input
-                          type="number"
-                          className="neo-input"
-                          placeholder="3"
-                          onChange={(e) =>
-                            setLogData({
-                              ...logData,
-                              [exercise.id]: {
-                                ...logData[exercise.id],
-                                sets: parseInt(e.target.value),
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Repetisjoner
-                        </label>
-                        <input
-                          type="text"
-                          className="neo-input"
-                          placeholder="8-12"
-                          onChange={(e) =>
-                            setLogData({
-                              ...logData,
-                              [exercise.id]: {
-                                ...logData[exercise.id],
-                                reps: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-700">{exercise.description}</p>
+                      {exercise.notes && (
+                        <p className="text-xs text-gray-600 mt-2 bg-amber-50 px-3 py-2 rounded-lg">
+                          💡 {exercise.notes}
+                        </p>
+                      )}
                     </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Notater (valgfritt)
-                      </label>
-                      <textarea
-                        className="neo-input"
-                        rows={2}
-                        placeholder="Føltes tungt, øk vekt neste gang..."
-                        onChange={(e) =>
-                          setLogData({
-                            ...logData,
-                            [exercise.id]: {
-                              ...logData[exercise.id],
-                              notes: e.target.value,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleLogWorkout(exercise.id)}
-                        className="neo-button-primary flex-1"
-                      >
-                        <CheckCircle className="w-5 h-5 inline mr-2" />
-                        Lagre økt
-                      </button>
-                      <button onClick={() => setActiveExercise(null)} className="neo-button">
-                        Avbryt
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setActiveExercise(exercise.id)}
-                    className="neo-button w-full flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Logg økt
-                  </button>
-                )}
 
-                {/* Exercise History */}
-                {exerciseLogs.length > 0 && (
-                  <div className="border-t border-gray-300 pt-4 mt-4">
-                    <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      Historikk ({exerciseLogs.length} økter)
-                    </h4>
-                    <div className="space-y-2">
-                      {exerciseLogs.slice(0, 3).map((log) => (
-                        <div key={log.id} className="text-sm text-gray-600 flex justify-between">
-                          <span>
-                            {log.sets_completed} sett × {log.reps_completed} reps
-                          </span>
-                          <span>{new Date(log.completed_at).toLocaleDateString('nb-NO')}</span>
+                    {/* Exercise History */}
+                    {exerciseLogs.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-700 mb-2">
+                          Historikk ({exerciseLogs.length})
+                        </h4>
+                        <div className="space-y-1.5">
+                          {exerciseLogs.slice(0, 5).map((log) => (
+                            <div
+                              key={log.id}
+                              className="text-xs text-gray-600 flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg"
+                            >
+                              <span className="font-semibold">
+                                {log.sets_completed} sett × {log.reps_completed} reps
+                              </span>
+                              <span>{new Date(log.completed_at).toLocaleDateString('nb-NO')}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -291,6 +250,92 @@ const ProgramView: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Logging Modal */}
+      {loggingExercise && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50 p-4">
+          <div className="neo-card max-w-md w-full animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Logg økt</h3>
+              <button
+                onClick={() => setLoggingExercise(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="font-semibold text-gray-700">
+                {exercises.find((e) => e.id === loggingExercise)?.name}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Sett</label>
+                <input
+                  type="number"
+                  className="neo-input text-center text-lg font-bold"
+                  value={logData.sets || ''}
+                  onChange={(e) =>
+                    setLogData({ ...logData, sets: parseInt(e.target.value) || 0 })
+                  }
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Reps</label>
+                <input
+                  type="text"
+                  className="neo-input text-center text-lg font-bold"
+                  value={logData.reps}
+                  onChange={(e) => setLogData({ ...logData, reps: e.target.value })}
+                  placeholder="8-12"
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Notater (valgfritt)
+              </label>
+              <textarea
+                className="neo-input text-sm"
+                rows={2}
+                value={logData.notes}
+                onChange={(e) => setLogData({ ...logData, notes: e.target.value })}
+                placeholder="Føltes tungt, øk vekt neste gang..."
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setLoggingExercise(null)} className="neo-button flex-1">
+                Avbryt
+              </button>
+              <button onClick={handleLogWorkout} className="neo-button-primary flex-1">
+                Lagre
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
