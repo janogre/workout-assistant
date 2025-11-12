@@ -78,8 +78,9 @@ const ProgramView: React.FC = () => {
   const getTotalEstimatedTime = () => {
     const totalMinutes = exercises.reduce((acc, ex) => {
       const restSeconds = parseInt(ex.rest_time) || 60;
-      const setTime = ex.sets * (30 + restSeconds / 60); // Assume ~30 sec per set
-      return acc + setTime;
+      // Time per exercise: (sets * 30 sec) + (pauses between sets * rest_time)
+      const exerciseTimeSeconds = (ex.sets * 30) + ((ex.sets - 1) * restSeconds);
+      return acc + (exerciseTimeSeconds / 60); // Convert to minutes
     }, 0);
     return Math.round(totalMinutes);
   };
