@@ -1,0 +1,28 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#grad)" rx="110"/>
+
+  <!-- Dumbbell Icon -->
+  <g fill="#ffffff">
+    <!-- Left weight -->
+    <rect x="80" y="160" width="53" height="192" rx="8"/>
+    <rect x="53" y="192" width="107" height="128" rx="8"/>
+
+    <!-- Right weight -->
+    <rect x="379" y="160" width="53" height="192" rx="8"/>
+    <rect x="352" y="192" width="107" height="128" rx="8"/>
+
+    <!-- Bar -->
+    <rect x="133" y="240" width="246" height="32" rx="16"/>
+  </g>
+
+  <!-- AI Text -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="#ffffff" text-anchor="middle">AI</text>
+</svg>
