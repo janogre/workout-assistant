@@ -29,3 +29,19 @@
     @apply bg-gradient-to-br from-primary-400 to-primary-600 text-white rounded-2xl shadow-neo px-6 py-3 font-semibold transition-all duration-300 hover:shadow-neo-hover active:shadow-neo-inset;
   }
 }
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

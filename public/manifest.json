@@ -1,0 +1,42 @@
+{
+  "name": "AI Treningsassistent",
+  "short_name": "Trening AI",
+  "description": "AI-drevet treningsassistent med personlig tilpassede treningsprogrammer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Opprett program",
+      "short_name": "Ny",
+      "description": "Lag et nytt treningsprogram med AI",
+      "url": "/chat",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mine programmer",
+      "short_name": "Programmer",
+      "description": "Se dine treningsprogrammer",
+      "url": "/programs",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

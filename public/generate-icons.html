@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Generer ikoner for appen (åpne i nettleser og høyreklikk for å lagre)</p>
+
+    <h2>192x192</h2>
+    <canvas id="icon192" width="192" height="192"></canvas>
+
+    <h2>512x512</h2>
+    <canvas id="icon512" width="512" height="512"></canvas>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#3b82f6');  // blue-500
+            gradient.addColorStop(1, '#2563eb');  // blue-600
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw dumbbell icon
+            const scale = size / 192;
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 8 * scale;
+            ctx.lineCap = 'round';
+
+            // Left weight
+            ctx.fillRect(30 * scale, 60 * scale, 20 * scale, 72 * scale);
+            ctx.fillRect(20 * scale, 72 * scale, 40 * scale, 48 * scale);
+
+            // Right weight
+            ctx.fillRect(142 * scale, 60 * scale, 20 * scale, 72 * scale);
+            ctx.fillRect(132 * scale, 72 * scale, 40 * scale, 48 * scale);
+
+            // Bar
+            ctx.beginPath();
+            ctx.moveTo(50 * scale, 96 * scale);
+            ctx.lineTo(142 * scale, 96 * scale);
+            ctx.stroke();
+
+            // Add "AI" text
+            ctx.font = `bold ${28 * scale}px Arial`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('AI', size/2, size - 30 * scale);
+        }
+
+        drawIcon(document.getElementById('icon192'));
+        drawIcon(document.getElementById('icon512'));
+
+        // Auto-download
+        setTimeout(() => {
+            ['icon192', 'icon512'].forEach(id => {
+                const canvas = document.getElementById(id);
+                const link = document.createElement('a');
+                const size = canvas.width;
+                link.download = `icon-${size}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

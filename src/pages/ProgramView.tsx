@@ -108,19 +108,19 @@ const ProgramView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 pb-24">
+    <div className="min-h-screen p-3 sm:p-4 md:p-8 pb-24">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => navigate('/dashboard')}
-            className="neo-button p-2 mb-4 inline-flex items-center gap-2"
+            className="neo-button p-2 mb-3 sm:mb-4 inline-flex items-center gap-2 text-sm active:scale-95"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Tilbake</span>
+            <span>Tilbake</span>
           </button>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">{program.name}</h1>
-          <p className="text-gray-600 text-sm">{program.description}</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">{program.name}</h1>
+          <p className="text-gray-600 text-xs sm:text-sm">{program.description}</p>
         </div>
 
         {/* Success Message */}
@@ -132,20 +132,20 @@ const ProgramView: React.FC = () => {
         )}
 
         {/* Compact Stats Bar */}
-        <div className="neo-card mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="neo-card mb-4 sm:mb-6 p-4 sm:p-6">
+          <div className="flex items-center justify-around sm:justify-start sm:gap-8">
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-800">{exercises.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{exercises.length}</p>
               <p className="text-xs text-gray-600">øvelser</p>
             </div>
-            <div className="h-10 w-px bg-gray-300"></div>
+            <div className="h-8 sm:h-10 w-px bg-gray-300"></div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-800">{getTotalEstimatedTime()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{getTotalEstimatedTime()}</p>
               <p className="text-xs text-gray-600">min</p>
             </div>
-            <div className="h-10 w-px bg-gray-300"></div>
+            <div className="h-8 sm:h-10 w-px bg-gray-300"></div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-gray-800">{logs.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{logs.length}</p>
               <p className="text-xs text-gray-600">økter</p>
             </div>
           </div>
@@ -162,50 +162,50 @@ const ProgramView: React.FC = () => {
               <div key={exercise.id} className="neo-card hover:shadow-lg transition-all">
                 {/* Compact Header - Always Visible */}
                 <div
-                  className="flex items-center gap-3 cursor-pointer"
+                  className="flex items-center gap-2 sm:gap-3 cursor-pointer"
                   onClick={() => setExpandedExercise(isExpanded ? null : exercise.id)}
                 >
-                  <div className="neo-card w-8 h-8 flex items-center justify-center text-sm font-bold text-primary-600">
+                  <div className="neo-card w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold text-primary-600 flex-shrink-0">
                     {index + 1}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-800 text-base">{exercise.name}</h3>
-                    <div className="flex items-center gap-3 text-xs text-gray-600 mt-0.5">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-800 text-sm sm:text-base truncate">{exercise.name}</h3>
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-600 mt-0.5 flex-wrap">
                       <span className="font-semibold">
                         {exercise.sets} × {exercise.reps}
                       </span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {exercise.rest_time}
                       </span>
                       {lastLog && (
                         <>
-                          <span>•</span>
-                          <span className="text-green-600">
+                          <span className="hidden md:inline">•</span>
+                          <span className="text-green-600 hidden md:inline">
                             Sist: {lastLog.sets_completed} × {lastLog.reps_completed}
                           </span>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setLoggingExercise(exercise.id);
                         setLogData({ sets: exercise.sets, reps: exercise.reps, notes: '' });
                       }}
-                      className="neo-button-primary px-3 py-1.5 text-xs flex items-center gap-1"
+                      className="neo-button-primary px-2 sm:px-3 py-1 sm:py-1.5 text-xs flex items-center gap-1 active:scale-95"
                     >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      Logg
+                      <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                      <span className="hidden sm:inline">Logg</span>
                     </button>
                     <button className="text-gray-400 p-1">
                       {isExpanded ? (
-                        <ChevronUp className="w-5 h-5" />
+                        <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <ChevronDown className="w-5 h-5" />
+                        <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </button>
                   </div>
